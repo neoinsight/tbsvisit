@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW)
 wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-<title>Pre-Find-Out</title>
+<title>Permanent residents of Canada - testing</title>
 <meta content="width=device-width,initial-scale=1" name="viewport">
 <!-- Meta data -->
 <meta name="description" content="Web Experience Toolkit (WET) includes reusable components for building and maintaining innovative Web sites that are accessible, usable, and interoperable. These reusable components are open source software and free for use by departments and external Web communities">
@@ -99,13 +99,15 @@ wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licenc
 </div>
 </nav>
 </header>
+<main role="main" property="mainContentOfPage" class="container">
 
-<div class="container">
-		<main role="main" property="mainContentOfPage" >
+
+ <!-- Details/Summary expand for print -->
+ <span class="wb-toggle" data-toggle='{"selector": "main summary", "print": "on"}'></span> 
+
+
 		<!-- Content title begins / D&eacute;but du titre du contenu -->
-			 <header>
- 			 <h1 id="cn-cont">Find out if you need a visa</h1>
- 			</header>
+			 <h1 id="cn-cont">Find out if you need a visa</h1>
  <!-- Content Title ends / Fin du titre du contenu --> 
  <!-- Content begins / D&eacute;but du contenue -->
  			<section>
@@ -114,20 +116,28 @@ wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licenc
  			   <!-- Embedded survey--> 
 				<script type="text/javascript" >document.write('<script src="http' + ( ("https:" == document.location.protocol) ? "s" : "") + '://www.surveygizmo.com/s3/3216751/cd24ae9f5a99?__output=embedjs&__ref=' + escape(document.location.origin + document.location.pathname) + '" type="text/javascript" ></scr'  + 'ipt>');</script><noscript>Better surveys, better data -  <a href="https://www.surveygizmo.com/" title="Online Survey Software">www.surveygizmo.com</a>. <a href="http://www.surveygizmo.com/s3/3216751/cd24ae9f5a99??jsfallback=true">Please take my survey now</a></noscript><style>.sg-survey{display:none; }</style>
  			 </section>
-		<div class="row pagedetails">
-			<div class="col-sm-6 col-lg-4 mrgn-tp-sm">
-				<a href="https://www.canada.ca/en/report-problem.html" class="btn btn-default btn-block">Report a problem or mistake on this page</a>
-			</div>
-			<div class="datemod col-xs-12 mrgn-tp-lg">
-				<dl id="wb-dtmd">
-				<dt>Date modified:&#32;</dt>
-				<dd><time property="dateModified">2016-10-27</time></dd>
-				</dl>
-			</div>
-		</div>
-		</main>
-</div>
 	
+  <!-- Fin du contenue/Content ends  --> 
+
+
+<div class="row pagedetails">
+    <div class="col-sm-6 col-lg-4 mrgn-tp-sm">
+    	<a href="https://www.canada.ca/en/report-problem.html" class="btn btn-default btn-block">Report a problem or mistake on this page</a>
+    </div>
+	<div class="col-sm-3 mrgn-tp-sm pull-right">
+		<div class="wb-share" data-wb-share='{"lnkClass": "btn btn-default btn-block"}'></div>
+	</div>
+	<div class="datemod col-xs-12 mrgn-tp-lg">
+		<dl id="wb-dtmd">
+			<dt>Date Modified:&#32;</dt>
+			<dd><time property="dateModified">2016-08-03</time></dd>
+		</dl>
+	</div>
+</div>
+
+
+</main>
+
 <footer role="contentinfo" id="wb-info">
 <nav role="navigation" class="container wb-navcurr">
 <h2 class="wb-inv">About government</h2>
@@ -161,7 +171,7 @@ wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licenc
 <a href="#wb-cont">Top of Page <span class="glyphicon glyphicon-chevron-up"></span></a>
 </div>
 <div class="col-xs-6 col-md-2 text-right">
-<object type="image/svg+xml" tabindex="-1" role="img" data="../GCWeb/assets/wmms-blk.svg" aria-label="Symbol of the Government of Canada"></object>
+<object type="image/svg+xml" tabindex="-1" role="img" data="../../GCWeb/assets/wmms-blk.svg" aria-label="Symbol of the Government of Canada"></object>
 </div>
 </div>
 </div>
@@ -169,12 +179,11 @@ wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licenc
 </footer>
 <!--[if gte IE 9 | !IE ]><!-->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
-<script src="../wet-boew/js/wet-boew.min.js"></script>
+<script src="../../wet-boew/js/wet-boew.min.js"></script>
 <!--<![endif]-->
 <!--[if lt IE 9]>
-<script src="../wet-boew/js/ie8-wet-boew2.min.js"></script>
-
+<script src="../../wet-boew/js/ie8-wet-boew2.min.js"></script>
 <![endif]-->
-<script src="../GCWeb/js/theme.min.js"></script>
+<script src="../../GCWeb/js/theme.min.js"></script>
 </body>
 </html>
