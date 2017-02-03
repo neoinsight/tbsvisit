@@ -246,11 +246,59 @@ wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licenc
 
 <![endif]-->
 <script src="../../GCWeb/js/theme.min.js"></script>
-<!--SurveyGizmo Invite Code <!-->
-<script type="text/javascript">
-(function(d,e,j,h,f,c,b){d.SurveyGizmoBeacon=f;d[f]=d[f]||function(){(d[f].q=d[f].q||[]).push(arguments)};c=e.createElement(j),b=e.getElementsByTagName(j)[0];c.async=1;c.src=h;b.parentNode.insertBefore(c,b)})(window,document,'script','//d2bnxibecyz4h5.cloudfront.net/runtimejs/intercept/intercept.js','sg_beacon');
-sg_beacon('init','NTA1NTMxLTkyNDY5ZWNjMjVkNzEyMDBhMzkwODhjZWJlMjAwYTIwNDEyODc0OTU5YTI3NTBjMWM5');
+
+<!-- BEGIN Optimal Workshop snippet -->
+
+<div id="owInviteSnippet" style="position:fixed;right:20px;bottom:20px;width:300px;padding:20px;margin:0;border-radius:6px;background:#333;color:#FFF;transition: all 1s ease;opacity:0;display:none;">
+  <a id="owInviteClose" href="#" onclick="owInvite_cancel();" style="float:right;height:24px;width:20px;background-color:#ddd;border:1px solid black;margin-top:-30px;margin-right:-30px;cursor:pointer;color:black;border-radius:40px;padding-left:10px;padding-top:6px;text-decoration:none;font-family:sans-serif;font-size:16px;font-weight:bold;">X</a>
+  <div id="owInviteMessage" style="padding:0;margin:0 0 20px 0;font-size:16px;">#</div>
+  <a id="owInviteOk" href="#" onclick="owInvite_ok();" style="color:#7DB6EE;font-size:16px;font-weight:bold;text-decoration:underline;">#</a>
+  <a id="owInviteCancel" href="#" onclick="owInvite_cancel();" style="color:#CCC;font-size:14px;text-decoration:underline;float:right;">#</a>
+</div>
+<script>
+
+  /* Change these ----- */  
+  var owSurveys = [
+    "http://www.surveygizmo.com/s3/3295272/Visit-Canada-2/"
+    ];
+  var owInviteMessage = "Take 5 minutes now or later to help us improve our website.";
+  var owInviteButton  = "Yes I'll help";
+  var owInviteCancel  = "No thanks";
+  /* ------------------ */
+
+  function owInvite_ok() {
+    window.open(owSurveyAddress, '_blank');
+    owInvite_cancel();
+    return false;
+  }
+  function owInvite_cancel() {
+    document.getElementById("owInviteSnippet").style.display = 'none';
+    return false;
+  }
+  var owOldOnload=window.onload;
+  window.onload=function() {
+    if(owOldOnload) {
+      owOldOnload();
+    }
+    if (document.cookie.indexOf("owInvited") == -1) {
+      var d = new Date();
+      d.setTime(d.getTime()+(7*24*60*60*1000));
+      document.cookie="owInvited=Yes; expires="+d.toGMTString();
+      if (document.cookie.indexOf("owInvite") >= 0) {
+        owSurveyAddress = owSurveys[Math.floor(Math.random() * owSurveys.length)];
+        document.getElementById("owInviteOk").innerHTML = owInviteButton;
+        document.getElementById("owInviteCancel").innerHTML = owInviteCancel;
+        document.getElementById("owInviteMessage").innerHTML = owInviteMessage;
+        var e = document.getElementById("owInviteSnippet");
+        e.style.display = 'block';
+        setTimeout(function(){
+          e.style.opacity = 1;
+        }, 2000);
+      }
+    }
+  };
 </script>
-	<![End Survey Gizmo Inviter Code]-->
+
+<!-- END Optimal Workshop snippet -->
 </body>
 </html>
