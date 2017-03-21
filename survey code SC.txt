@@ -1,0 +1,332 @@
+/**
+* Canada.ca survey overlay (not related to WET's overlay plugin)
+*/
+
+
+function ExitSurveySetup() {
+		"use strict";
+
+	if ( typeof jQuery === "function" && typeof wb === "object" ){
+
+		var eic = window.eic || {};
+
+		/**
+		 * Returns the value of a specific cookie, or undefined.
+		 */
+		eic.getCookie = function( name ) {
+			var cookies = document.cookie.split( ";" ),
+				len = cookies.length,
+				i,
+				value,
+				cpair;
+
+			for ( i = 0; i < len; i += 1 ) {
+			 cpair = cookies[ i ].split( "=" );
+
+				if ( $.trim( cpair[ 0 ] ) === name ) {
+					value = cpair[ 1 ];
+					break;
+				}
+			}
+
+			return value;
+		};
+
+		/**
+		 * Sets a cookie (name, value and expiration in days).
+		 */
+		eic.setCookie = function( name, value, end ) {
+			var expires = "",
+				date;
+
+			if ( end !== undefined ) {
+				switch ( end.constructor ) {
+					case Number:
+						date = new Date();
+						date.setTime( date.getTime() + ( end * 24 * 60 * 60 * 1000 ) );
+						break;
+					case String:
+						date = new Date( end );
+						break;
+				}
+
+				if ( date instanceof Date ) {
+					date.setHours( 0 );
+					date.setMinutes( 0 );
+					date.setSeconds( 0 );
+					expires = "expires=" + date.toUTCString();
+				}
+			}
+
+			document.cookie = name + "=" + value + ";" + expires + "; path=/";
+			
+			// TESTING: Log cookie's name and current value in the console. Needed for testing in browsers that don't have native dev tools that can show cookies (e.g. IE11). Also needed by browsers that don't properly refresh cookie values in their native dev tools (i.e. Opera and Firefox with e10s enabled). Regular Firefox is fine, so long as e10s hasn't been manually-enabled. Firebug is fine too.
+			// console.log( "Set cookie... "+ name + " = " + value );
+		};
+		
+		/**
+		 * Returns a random integer between min (included) and max (included).
+		 * Source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+		 */
+		eic.getRandomIntInclusive = function( min, max ) {
+			return Math.floor( Math.random() * ( max - min + 1 ) ) + min;
+		}
+		
+		
+		/**
+		 * Returns a boolean indicating whether a given URL parameter exists.
+		 * Source: http://stackoverflow.com/a/21903119
+		 */
+		eic.getUrlParameter = function getUrlParameter( sParam ) {
+			var sPageURL = decodeURIComponent( window.location.search.substring( 1 ) ),
+				sURLVariables = sPageURL.split( '&' ),
+				sParameterName,
+				i;
+
+			for (i = 0; i < sURLVariables.length; i++) {
+				sParameterName = sURLVariables[i].split( '=' );
+
+				if ( sParameterName[0] === sParam ) {
+					return sParameterName[1] === undefined ? true : sParameterName[1];
+				}
+			}
+		};
+
+		window.eic = eic;
+
+	/*****/
+
+		var overlay,
+			surveyCheck,
+			eic = window.eic || {};
+
+		overlay = {
+
+			// Show the survey overlay.
+			show: function( cookieName, cookieValue, cookieDaysDuration ) {
+
+				// Declare variables: Dictionary of French/English content, HTML code and jQuery object.
+				var dict = {
+					"heading": ( wb.lang === "en" ) ? "Exit survey" : "Sondage de fin de visite",
+					"paragraph1": ( wb.lang === "en" ) ? "Please take a few minutes at the end of your visit today to anonymously tell us about your experience with the Canada.ca website." : "Veuillez prendre quelques minutes à la fin de votre visite aujourd'hui pour nous faire part anonymement de votre expérience sur le site Web Canada.ca.",
+					"paragraph2": ( wb.lang === "en" ) ? "Choosing \u201CYes, after my visit\u201D will open a new window that you can return to once you complete your visit to Canada.ca." : "En choisissant \u00AB Oui, après ma visite \u00BB, une nouvelle fenêtre s'ouvrira. Vous pourrez la remplir une fois votre visite sur le site Web Canada.ca terminée.",
+					"yes": ( wb.lang === "en" ) ? "Yes, <span class='wb-inv'>I will take the exit survey </span>after my visit<span class='wb-inv'>.</span>" : "Oui, <span class='wb-inv'>je vais participer au sondage de départ </span>après ma visite<span class='wb-inv'>.</span>",
+					"yesUrl": ( wb.lang === "en" ) ? "https://www1.canada.ca/en/survey/index.html" : "https://www1.canada.ca/fr/sondage/index.html",
+					"no": ( wb.lang === "en" ) ? "No, <span class='wb-inv'>I do not want to take the exit survey, </span>thank you<span class='wb-inv'>.</span>" : "Non, <span class='wb-inv'>je ne veux pas participer au sondage de départ, </span>merci<span class='wb-inv'>.</span>",
+					"close": ( wb.lang === "en" ) ? "Close: Exit survey (escape key)" : "Fermer : Sondage de fin de visite (touche d'échappement)"
+				},
+				html =	"<aside class='survey hidden-print'>" +
+							"<style scoped>" +
+								// Default (extra extra small view and over)
+								".survey {z-index: 1000; position: relative; margin: 0 auto; margin: 0 15px;}" +
+								"#survey-close {height: 42px; line-height: 42px;}" +
+								
+								// Media queries (for modern browsers and IE8 - via respond.js)
+								"@media screen and (min-width: 480px) {" + // Extra small view and over
+									".survey {position: fixed; bottom: 4.9em; left: 0; right: 0; margin: 0 auto; padding: 15px;}" +
+									".survey .panel {box-shadow: 0 0 15px;}" +
+									".survey .panel:focus {outline: 1px dotted #fff;}" +
+									"#survey-close {top: 15px; right: 15px;}" +
+								"}" +
+								"@media screen and (min-width: 480px) and (max-width: 767px) {" + // Small view only
+									".survey {margin: 0 15px;}" +
+									"#survey-close {right: 30px;}" +
+								"}" +
+								"@media screen and (min-width: 768px) {" + // Medium view and over
+									".survey {width: 720px;}" +
+								"}" +
+								"@media screen and (min-width: 992px) {" +
+									".survey {width: 470px; left: 470px; bottom: 4.2em;}" + // Large view and over
+								"}" +
+								"@media screen and (min-width: 1200px) {" + // Extra large view and over
+								 ".survey {width: 570px; left: 570px;}" +
+								"}" +
+								
+								// View class fallbacks (needed for IE9-11 - they seem to ignore JS-injected media queries unless the user manually resizes their browser window)
+								"html:not(.xxsmallview) .survey {position: fixed; bottom: 4.9em; left: 0; right: 0; margin: 0 auto; padding: 15px;}" +
+								"html:not(.xxsmallview) .survey .panel {box-shadow: 0 0 15px;}" +
+								"html:not(.xxsmallview) .survey .panel:focus {outline: 1px dotted #fff;}" +
+								"html:not(.xxsmallview) #survey-close {top: 15px; right: 15px;}" +
+								"html.xsmallview .survey {margin: 0 15px;}" +
+								"html.smallview .survey {width: 720px;}" +
+								"html.smallview #survey-close {right: 30px;}" +
+								"html.mediumview .survey {width: 470px; left: 470px; bottom: 4.2em;}" +
+								"html.largeview .survey, html.xlargeview .survey {width: 570px; left: 570px; bottom: 4.2em;}" +
+							"</style>" +
+							"<div class='panel panel-primary mrgn-bttm-0'>" +
+								"<header class='panel-heading'>" +
+									"<h2 class='panel-title'>" + dict.heading + "</h2>" + 
+								"</header>" +
+								"<div class='panel-body'>" +
+									"<p>" + dict.paragraph1 + "</p>" +
+									"<p class='mrgn-bttm-0'>" + dict.paragraph2 + "</p>" +
+									"<ul class='list-inline mrgn-bttm-0'>" +
+										"<li class='mrgn-tp-md'><a id='survey-yes' class='btn btn-primary' href='" + dict.yesUrl + "' target='_blank'><strong>" + dict.yes + "</strong></a></li>" +
+										"<li class='mrgn-tp-md'><button id='survey-no' class='btn btn-default survey-close'>" + dict.no + "</button></li>" +
+									"</ul>" +
+								"</div>" +
+								"<button id='survey-close' class='mfp-close' title='" + dict.close + "'>×<span class='wb-inv'> " + dict.close + "</span></button>" +
+							"</div>" +
+						"</aside>",
+				$html = $( html ),
+				$userFocus,
+				overlayIsClosing,
+				cookieValue,
+				focusFlag;
+				
+				// Close the overlay if any of its links/buttons get clicked or if the escape key gets pressed.
+				$html.on( "click vclick mouseup keydown", function( e ) {
+				
+					// Proceed if any of the overlay's links or buttons get clicked (including middle mouse clicks) or if the escape key gets pressed within the overlay.
+					if (
+							( ( e.type === "click" || e.type === "vclick" ) && e.which === 1 && $( e.target ).closest( "a, button", this ).length ) // Clicked/Tapped a link/button.
+							||
+							( e.type === "mouseup" && e.which === 2 && $( e.target ).closest( "a", this ).length ) // Middle-clicked a link.
+							||
+							( ( e.type === "keydown" ) && ( e.which === 27 ) ) // Pressed escape key.
+						) {
+						
+							// Set a flag to indicate the overlay is closing.
+							// Needed to prevent IE11 (possibly also IE8-10/Edge) from failing to return user focus when closing the overlay (due to a separate focusin event triggering too quickly and clearing the user focus variable before it's needed).
+							overlayIsClosing = 1;
+							
+							// Hide the overlay immediately.
+							$( this ).hide();
+							
+							// Remove the overlay shortly afterwards.
+							// This is being done to prevent problems when the yes link is middle-clicked. If the overlay were to be immediately removed, middle-clicking the yes link would remove the overlay without opening the link in a new tab/window. To avoid that issue, the overlay is now getting immediately hidden, then removed a short time later.
+							setTimeout( function() { $html.empty() }, 1000 );
+							
+							// Determine the cookie's new value, depending on the ID of which link/button was clicked. Don't set the cookie's value to yes/no if the Esc key was pressed.
+							if ( $( e.target ).closest( "#survey-yes", this ).length && ! ( ( e.type === "keydown" ) && ( e.which === 27 ) ) ) {
+								cookieValue = "yes";
+							}
+							else if ( $( e.target ).closest( "#survey-no", this ).length && ! ( ( e.type === "keydown" ) && ( e.which === 27 ) ) ) {
+								cookieValue = "no";
+							}
+							else {
+								cookieValue = "closed";
+							}
+							
+							// Return the user's focus to where they were before the overlay stole it, then delete the user focus variable.
+							// Otherwise, return the user's focus to the H1 element (or if it doesn't exist - the next element, which is likely to be main). Needed to prevent browsers from unexpectedly returning focus to the top of the page.
+							if ( $userFocus ) {
+								$userFocus.trigger( "setfocus.wb" );
+								$userFocus = null;
+							}
+							else {
+							
+								// Does the H1 exist? If yes, focus to it.
+								// Otherwise, focus to whatever element comes after the overlay (likely main).
+								if ( $( "h1" ).length ) {
+									$( "h1" ).trigger( "setfocus.wb" );
+								}
+								else {
+									$html.next().trigger( "setfocus.wb" );
+								}
+							}
+							
+							// Set cookie.
+							eic.setCookie( cookieName, cookieValue, cookieDaysDuration );
+							
+							// Remove this event handler.
+							$( this ).off();
+					}
+				} );
+				
+				// If the user tabs out of the overlay after it was automatically focused on, return their initial focus.
+				$html.find( ".panel" ).on( "keydown", function( e ) {
+					
+					// Proceed if tabbing backwards from the panel container/yes link or if tabbing forward from the close button.
+					if ( ( ( ( $( e.target ).hasClass( "panel" ) || e.target.id === "survey-yes" ) && e.shiftKey) || e.target.id === "survey-close" ) && e.which === 9 && $userFocus ) {
+							
+							// Don't focus to whatever comes directly before or after the overlay in the flow of content.
+							e.preventDefault();
+							
+							// Return the user's focus to where they were before the overlay stole it, then delete the user focus variable.
+							$userFocus.trigger( "setfocus.wb" );
+							$userFocus = null;
+							
+							// Remove this event handler.
+							$( this ).off( "keydown" );
+						}
+				} );
+
+				// Insert the overlay directly before the <main> element.
+				$( "main" ).before( $html );
+
+				// Find where the user is currently focused.
+				$userFocus = $( document.activeElement );
+				
+				// Automatically focus on the overlay.
+				$html.find( ".panel" ).trigger( "setfocus.wb" );
+				
+				// After the overlay steals focus, clear the user focus variable if the user goes outside of of it.
+				// It's possible to go outside of the overlay without closing or tabbing out of it (e.g. by clicking or touching outside of it or using a screen reader to navigate by links). In that scenario, the user focus variable needs to be cleared to prevent strange focusing if the user enters the overlay again afterwards and focuses out of/closes it.
+				$( "body" ).on( "focusin mousedown", function ( e ) {
+				
+					// When the survey overlay first gains focus, set the focus flag variable to 1. Sometimes the overlay isn't the first thing that gains focus.
+					// After the overlay has initially gained focus, once something outside of it gets focused on, clear the user focus variable. If the overlay is losing focus because it's being closed, don't do anything or else IE11 (possibly also IE8-10/Edge) will run this event handler too early and prevent the close event from returning user's focus to the right spot.
+					if ( $( e.target ).closest( ".survey", this ).length ) {
+						
+						if ( ! focusFlag ) {
+							focusFlag = 1;
+						}
+					}
+					else {
+					
+						if ( ! overlayIsClosing && $userFocus ) {
+							$userFocus = null;
+						}
+					}
+				} );
+			}
+		};
+
+		surveyCheck = function() {
+			var fluidsurveys = false,
+				cookieName = "exit-survey",
+				persCookieName = cookieName + "-persistent",
+				persCookieDaysDuration = 60,
+				sessCookieName = cookieName + "-session",
+				randomNum;
+			
+			// TESTING: If a "delete-survey-cookie" or "always-show-survey" URL parameter is present, delete the cookies beforehand.
+			if ( eic.getUrlParameter( "delete-survey-cookie" ) || eic.getUrlParameter( "always-show-survey" ) ) {
+				eic.setCookie( persCookieName, "delete me", -1 );
+				eic.setCookie( sessCookieName, "delete me", -1 );
+			}
+			
+			// TESTING: If a "always-show-survey" URL parameter is present, disable randomization to make the overlay always appear.
+			if ( eic.getUrlParameter( "always-show-survey" ) ) {
+				randomNum = 1;
+			}
+			
+			// Proceed if the current page isn't a splash/welcome page.
+			if ( ! $( "body" ).hasClass( "splash" ) ) {
+				
+				// Proceed if the user's browser doesn't already have a survey cookie.
+				if ( ! ( eic.getCookie( persCookieName ) || eic.getCookie( sessCookieName ) ) ) {
+
+					// Get a random number between 1 and 35.
+					if ( ! randomNum ) {
+						randomNum = eic.getRandomIntInclusive( 1, 35 );
+					}
+					
+					// If the user has been randomly selected to take the survey, set the cookie's value to ignored and show the overlay. The cookie will be updated later if the user interacts with the overlay.
+					// Otherwise, set a session cookie to prevent the overlay from having any chance of appearing during the same website visit.
+					if ( randomNum === 1 ) {
+						eic.setCookie( persCookieName, "ignored", persCookieDaysDuration );
+						overlay.show( persCookieName, persCookieDaysDuration );
+					}
+					else {
+						eic.setCookie( sessCookieName, "not shown" );
+					}
+				}
+			}
+	 };
+		surveyCheck(); 
+	}
+}
+
+window.addEventListener( "load", ExitSurveySetup );
